@@ -23,6 +23,12 @@ spring:
 server:
   port: 9000
 
+app:
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    chat-id: ${TELEGRAM_CHAT_ID:}
+    status-delay-ms: 300000
+
 ---
 spring:
   config:
@@ -31,3 +37,9 @@ spring:
 
 server:
   port: 8083
+
+app:
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    chat-id: ${TELEGRAM_CHAT_ID:}
+    status-delay-ms: 300000

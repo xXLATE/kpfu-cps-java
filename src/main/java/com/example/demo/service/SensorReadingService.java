@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class SensorReadingService {
     private final GreenhouseService greenhouseService;
     private final SensorReadingRepository sensorReadingRepository;
+    private final TelegramNotificationService telegramNotificationService;
 
     public List<SensorReadingResponse> getTimeline(Long greenhouseId) {
         greenhouseService.getById(greenhouseId);
@@ -48,7 +49,11 @@ public class SensorReadingService {
         reading.setAnomalyDescription(decision.description());
         reading.setCommand(decision.command());
 
-        return new SensorReadingResponse(sensorReadingRepository.save(reading));
+        SensorReading savedReading = sensorReadingRepository.save(reading);
+        if (savedReading.isAnomalous()) {
+            telegramNotificationService.sendMessage(buildAnomalyMessage(savedReading));
+        }
+        return new SensorReadingResponse(savedReading);
     }
 
     private void validate(SensorReadingRequest request) {
@@ -94,5 +99,18 @@ public class SensorReadingService {
     }
 
     private record AnomalyDecision(boolean anomalous, String description, DeviceCommand command) {
+    }
+
+    private String buildAnomalyMessage(SensorReading reading) {
+        return "Greenhouse anomaly detected\n"
+                + "Greenhouse: " + reading.getGreenhouse().getName() + "\n"
+                + "Measured at: " + reading.getMeasuredAt() + "\n"
+                + "Problems: " + reading.getAnomalyDescription() + "\n"
+                + "Command: " + reading.getCommand() + "\n"
+                + "Temperature: " + reading.getAirTemperature() + "\n"
+                + "Humidity: " + reading.getAirHumidity() + "\n"
+                + "Soil moisture: " + reading.getSoilMoisture() + "\n"
+                + "Light: " + reading.getLightLevel() + "\n"
+                + "CO2: " + reading.getCo2Level();
     }
 }
