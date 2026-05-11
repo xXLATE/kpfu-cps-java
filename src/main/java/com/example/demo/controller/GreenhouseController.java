@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,16 +23,19 @@ public class GreenhouseController {
     private final GreenhouseService greenhouseService;
 
     @GetMapping
+    @PreAuthorize("hasPermission(null, 'GREENHOUSE_READ')")
     public List<Greenhouse> getAll() {
         return greenhouseService.getAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasPermission(null, 'GREENHOUSE_READ')")
     public Greenhouse getById(@PathVariable Long id) {
         return greenhouseService.getById(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasPermission(null, 'GREENHOUSE_WRITE')")
     public Greenhouse create(@RequestBody GreenhouseRequest request) {
         return greenhouseService.create(request);
     }

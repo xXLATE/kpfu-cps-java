@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ public class ReadingLogImportController {
     private final ReadingLogImportService readingLogImportService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasPermission(null, 'LOG_IMPORT')")
     public LogImportResponse importCsv(
             @PathVariable Long greenhouseId,
             @RequestParam("file") MultipartFile file) {
