@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -24,9 +26,18 @@ public class TelegramNotificationService {
 
     public TelegramNotificationService(TelegramProperties telegramProperties) {
         this.telegramProperties = telegramProperties;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
+        HttpClient.Builder builder = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5));
+        if (telegramProperties.proxyEnabled()) {
+            builder.proxy(ProxySelector.of(new InetSocketAddress(
+                    telegramProperties.getProxyHost(),
+                    telegramProperties.getProxyPort())));
+            log.info(
+                    "Telegram proxy is enabled: {}:{}",
+                    telegramProperties.getProxyHost(),
+                    telegramProperties.getProxyPort());
+        }
+        this.httpClient = builder.build();
     }
 
     public boolean isEnabled() {
