@@ -31,6 +31,11 @@ public class SensorReadingService {
                 .toList();
     }
 
+    public SensorReadingResponse getById(Long greenhouseId, Long readingId) {
+        greenhouseService.getById(greenhouseId);
+        return new SensorReadingResponse(getReadingForGreenhouse(greenhouseId, readingId));
+    }
+
     public SensorReadingResponse acceptReading(Long greenhouseId, SensorReadingRequest request) {
         Greenhouse greenhouse = greenhouseService.getById(greenhouseId);
         validate(request);
@@ -56,7 +61,41 @@ public class SensorReadingService {
         return new SensorReadingResponse(savedReading);
     }
 
+    public SensorReadingResponse update(Long greenhouseId, Long readingId, SensorReadingRequest request) {
+        greenhouseService.getById(greenhouseId);
+        validate(request);
+
+        SensorReading reading = getReadingForGreenhouse(greenhouseId, readingId);
+        reading.setMeasuredAt(request.getMeasuredAt() == null ? reading.getMeasuredAt() : request.getMeasuredAt());
+        reading.setAirTemperature(request.getAirTemperature());
+        reading.setAirHumidity(request.getAirHumidity());
+        reading.setSoilMoisture(request.getSoilMoisture());
+        reading.setLightLevel(request.getLightLevel());
+        reading.setCo2Level(request.getCo2Level());
+
+        AnomalyDecision decision = analyze(request);
+        reading.setAnomalous(decision.anomalous());
+        reading.setAnomalyDescription(decision.description());
+        reading.setCommand(decision.command());
+
+        SensorReading savedReading = sensorReadingRepository.save(reading);
+        return new SensorReadingResponse(savedReading);
+    }
+
+    public void delete(Long greenhouseId, Long readingId) {
+        greenhouseService.getById(greenhouseId);
+        sensorReadingRepository.delete(getReadingForGreenhouse(greenhouseId, readingId));
+    }
+
+    private SensorReading getReadingForGreenhouse(Long greenhouseId, Long readingId) {
+        return sensorReadingRepository.findByIdAndGreenhouseId(readingId, greenhouseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sensor reading not found"));
+    }
+
     private void validate(SensorReadingRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sensor reading request is required");
+        }
         if (request.getAirTemperature() == null || request.getAirHumidity() == null
                 || request.getSoilMoisture() == null || request.getLightLevel() == null
                 || request.getCo2Level() == null) {

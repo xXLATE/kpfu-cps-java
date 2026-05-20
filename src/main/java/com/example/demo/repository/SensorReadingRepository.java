@@ -13,6 +13,10 @@ import com.example.demo.model.SensorReading;
 public interface SensorReadingRepository extends JpaRepository<SensorReading, Long> {
     List<SensorReading> findByGreenhouseIdOrderByMeasuredAtDesc(Long greenhouseId);
 
+    Optional<SensorReading> findByIdAndGreenhouseId(Long id, Long greenhouseId);
+
+    void deleteByGreenhouseId(Long greenhouseId);
+
     Optional<SensorReading> findTopByGreenhouseIdOrderByMeasuredAtDesc(Long greenhouseId);
 
     List<SensorReading> findByGreenhouseIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(

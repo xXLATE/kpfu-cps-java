@@ -51,6 +51,47 @@ public class GreenhouseReportService {
                 stats(readings, SensorReading::getCo2Level));
     }
 
+    public String buildReportCsv(Long greenhouseId, LocalDateTime from, LocalDateTime to) {
+        GreenhouseReportResponse report = buildReport(greenhouseId, from, to);
+        StringBuilder csv = new StringBuilder();
+
+        csv.append("greenhouseId,greenhouseName,from,to,readingsCount,anomaliesCount,status\n");
+        csv.append(report.getGreenhouseId()).append(',')
+                .append(csvValue(report.getGreenhouseName())).append(',')
+                .append(report.getFrom()).append(',')
+                .append(report.getTo()).append(',')
+                .append(report.getReadingsCount()).append(',')
+                .append(report.getAnomaliesCount()).append(',')
+                .append(report.getStatus()).append('\n');
+
+        csv.append('\n');
+        csv.append("metric,average,min,max\n");
+        appendMetric(csv, "airTemperature", report.getAirTemperature());
+        appendMetric(csv, "airHumidity", report.getAirHumidity());
+        appendMetric(csv, "soilMoisture", report.getSoilMoisture());
+        appendMetric(csv, "lightLevel", report.getLightLevel());
+        appendMetric(csv, "co2Level", report.getCo2Level());
+
+        return csv.toString();
+    }
+
+    private void appendMetric(StringBuilder csv, String name, ReadingMetricStats stats) {
+        csv.append(name).append(',')
+                .append(stats.getAverage()).append(',')
+                .append(stats.getMin()).append(',')
+                .append(stats.getMax()).append('\n');
+    }
+
+    private String csvValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
     private ReadingMetricStats stats(List<SensorReading> readings, ToDoubleFunction<SensorReading> extractor) {
         if (readings.isEmpty()) {
             return new ReadingMetricStats(0, 0, 0);
